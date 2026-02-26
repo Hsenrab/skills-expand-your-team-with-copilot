@@ -524,6 +524,13 @@ document.addEventListener("DOMContentLoaded", () => {
     // Format the schedule using the new helper function
     const formattedSchedule = formatSchedule(details);
 
+    // Create social share URLs
+    const activityUrl = `${window.location.origin}${window.location.pathname}#${encodeURIComponent(name)}`;
+    const shareUrl = encodeURIComponent(activityUrl);
+    const shareText = encodeURIComponent(`Check out ${name} at Mergington High School!`);
+    const twitterShareUrl = `https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrl}`;
+    const whatsappShareUrl = `https://wa.me/?text=${shareText}%20${shareUrl}`;
+
     // Create activity tag
     const tagHtml = `
       <span class="activity-tag" style="background-color: ${typeInfo.color}; color: ${typeInfo.textColor}">
@@ -594,6 +601,12 @@ document.addEventListener("DOMContentLoaded", () => {
         `
         }
       </div>
+      <div class="share-buttons">
+        <span class="share-label">Share:</span>
+        <a href="${twitterShareUrl}" target="_blank" rel="noopener noreferrer" class="share-btn share-twitter" title="Share on Twitter/X" aria-label="Share on Twitter/X">X</a>
+        <a href="${whatsappShareUrl}" target="_blank" rel="noopener noreferrer" class="share-btn share-whatsapp" title="Share on WhatsApp" aria-label="Share on WhatsApp">W</a>
+        <button class="share-btn share-copy" title="Copy link" aria-label="Copy link">&#128279;</button>
+      </div>
     `;
 
     // Add click handlers for delete buttons
@@ -610,6 +623,44 @@ document.addEventListener("DOMContentLoaded", () => {
           openRegistrationModal(name);
         });
       }
+    }
+
+    // Add click handler for copy link button
+    const copyButton = activityCard.querySelector(".share-copy");
+    if (copyButton) {
+      copyButton.addEventListener("click", async (e) => {
+        e.preventDefault();
+        const textToCopy = `${name} - Mergington High School\n${activityUrl}`;
+        const originalHTML = copyButton.innerHTML;
+        const showSuccess = () => {
+          copyButton.innerHTML = "&#10003;";
+          copyButton.classList.add("share-copy-success");
+          setTimeout(() => {
+            copyButton.innerHTML = originalHTML;
+            copyButton.classList.remove("share-copy-success");
+          }, 1500);
+        };
+        try {
+          await navigator.clipboard.writeText(textToCopy);
+          showSuccess();
+        } catch (err) {
+          // Fallback for browsers without clipboard API support
+          try {
+            const textarea = document.createElement("textarea");
+            textarea.value = textToCopy;
+            textarea.style.position = "fixed";
+            textarea.style.opacity = "0";
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+            document.execCommand("copy");
+            document.body.removeChild(textarea);
+            showSuccess();
+          } catch (fallbackErr) {
+            console.error("Failed to copy link:", fallbackErr);
+          }
+        }
+      });
     }
 
     activitiesList.appendChild(activityCard);
